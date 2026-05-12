@@ -1,4 +1,4 @@
-export const DISCORD_INVITE = "https://discord.gg/kVqaRA6aqM";
+export const DISCORD_INVITE = "https://discord.gg/hsfeqx24dm";
 
 export const RANK_POWER = {
   F: 1, E: 2, D: 3, C: 4, B: 5, A: 6, S: 7, SS: 8, SSS: 9
