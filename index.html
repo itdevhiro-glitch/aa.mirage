@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Aqua Mirage Community</title>
+  <link rel="stylesheet" href="./css/style.css">
+  <link rel="icon" href="./assets/logo.png">
+</head>
+<body>
+  <div class="noise"></div>
+  <nav class="nav">
+    <div class="wrap navin">
+      <a class="brand" href="index.html"><img src="./assets/logo.png" alt="Aqua Mirage"><span>Aqua Mirage<small>Toram Adventurer Guild</small></span></a>
+      <div class="links"><a data-nav href="index.html">Home</a><a data-nav href="leaderboard.html">Leaderboard</a><a data-nav href="members.html">Members</a><a data-nav href="about.html">About</a><a class="btn primary" data-discord target="_blank">Join Discord</a></div>
+      <a class="btn mobileMenu" data-discord target="_blank">Join</a>
+    </div>
+  </nav>
+  <main>
+    <section class="hero toramHero">
+      <div class="heroBg"></div>
+      <div class="wrap grid">
+        <div class="heroText">
+          <div class="toramBadge"><img src="./assets/toram-logo.webp" alt="Toram Online"><span>Inspired Community</span></div>
+          <div class="eyebrow">✦ Toram Online Guild Community</div>
+          <h1 class="h1">Aqua Mirage<br><span class="grad">Adventurer Guild</span></h1>
+          <p class="lead">Community profile untuk guild Aqua Mirage: tempat member Toram berkumpul, mengambil quest, menaikkan rank, mengumpulkan Spina, dan menampilkan progres petualang melalui bot Noir.</p>
+          <div class="actions"><a class="btn primary" data-discord target="_blank">Join Server Discord</a><a class="btn" href="leaderboard.html">Lihat Leaderboard</a></div>
+          <div class="warn">Invite resmi server: <b>discord.gg/kVqaRA6aqM</b></div>
+        </div>
+        <div class="heroCard gameCard">
+          <div class="logoPanel"><img src="./assets/logo.png" alt="Aqua Mirage Logo"><div class="gameLine">Toram Online • Quest • Rank • Spina</div><div class="status"><div class="pill"><b data-count="members">0</b><span>Members</span></div><div class="pill"><b data-count="quest">0</b><span>Quest Clear</span></div><div class="pill"><b data-count="spina">0</b><span>Total Spina</span></div></div></div>
+        </div>
+      </div>
+    </section>
+    <section class="section"><div class="wrap"><div class="sectionHead"><div><h2>Toram Guild Experience</h2><p class="sub">Aqua Mirage dibuat sebagai base camp komunitas Toram Online dengan sistem progres yang jelas, rapi, dan terasa seperti guild adventurer sungguhan.</p></div></div><div class="cards"><article class="card"><div class="icon">⚔️</div><h3>Quest Clear</h3><p>Member menyelesaikan misi Toram atau guild task, lalu claim agar progres petualangan masuk ke database Noir.</p></article><article class="card"><div class="icon">💎</div><h3>Spina Sultan</h3><p>Leaderboard Top Spina menampilkan member dengan koleksi Spina tertinggi sebagai simbol kontribusi dan kemajuan ekonomi guild.</p></article><article class="card"><div class="icon">🏆</div><h3>Tier & Rank</h3><p>Sistem rank membantu member melihat posisi mereka, dari petualang baru sampai tier tertinggi di Aqua Mirage.</p></article></div></div></section>
+    <section class="section"><div class="wrap noir"><div class="noirBadge"><div><div class="avatar">🤖</div><h3>Noir</h3><p class="meta">Admin Bot Aqua Mirage</p></div></div><div class="noirText"><h2>Meet Noir</h2><p class="sub">Noir adalah admin bot resmi Aqua Mirage. Noir membantu pendaftaran member, pencatatan quest, claim progress, rank, Spina, dan data leaderboard agar komunitas Toram lebih tertata.</p><div class="actions"><a class="btn primary" data-discord target="_blank">Masuk ke Guild</a><a class="btn" href="about.html">Pelajari Sistem</a></div></div></div></section>
+    <section class="section"><div class="wrap"><div class="sectionHead"><div><h2>Live Leaderboard</h2><p class="sub">Ranking realtime dari database bot: Top Quest Clear, Top Tier, dan Top Spina.</p></div><a class="btn" href="leaderboard.html">Full Ranking</a></div><div class="lbGrid"><div class="board"><div class="boardHead"><h3>Top Quest Clear</h3></div><div class="list" id="topQuest"><div class="empty">Loading...</div></div></div><div class="board"><div class="boardHead"><h3>Top Tier</h3></div><div class="list" id="topTier"><div class="empty">Loading...</div></div></div><div class="board"><div class="boardHead"><h3>Top Spina</h3></div><div class="list" id="topSpina"><div class="empty">Loading...</div></div></div></div></div></section>
+  </main>
+  <footer class="footer"><div class="wrap footin"><b>Aqua Mirage Community</b><span>Toram Online Guild Profile • Powered by Noir</span></div></footer>
+  <script type="module" src="./js/home.js"></script>
+</body>
+</html>
