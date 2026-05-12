@@ -146,7 +146,7 @@ export async function loadUsers() {
         name: getName(id, u || {}),
         rank: getRank(u || {}),
         exp: getExp(u || {}),
-        questClear:
+        questClear: Number(u.completedQuest ?? 0),
             questClearMap[id] ||
             num(u?.completedQuest) ||
             num(u?.questsCleared) ||
