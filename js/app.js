@@ -14,54 +14,6 @@ function num(v) {
   return 0;
 }
 
-function pickUserId(obj = {}) {
-  return String(
-    obj.userId ||
-    obj.uid ||
-    obj.discordId ||
-    obj.discordID ||
-    obj.memberId ||
-    obj.authorId ||
-    obj.playerId ||
-    obj.user ||
-    ""
-  );
-}
-
-function isApproved(obj = {}) {
-  const status = String(obj.status || "").toLowerCase();
-  return (
-    status === "approved" ||
-    status === "accept" ||
-    status === "accepted" ||
-    status === "clear" ||
-    status === "cleared" ||
-    Boolean(obj.approvedAt)
-  );
-}
-
-function collectObjects(node, result = []) {
-  if (!node || typeof node !== "object") return result;
-
-  if (
-    node.questId ||
-    node.type ||
-    node.amount ||
-    node.status ||
-    node.approvedAt
-  ) {
-    result.push(node);
-  }
-
-  for (const value of Object.values(node)) {
-    if (value && typeof value === "object") {
-      collectObjects(value, result);
-    }
-  }
-
-  return result;
-}
-
 function getName(id, u = {}) {
   return (
     u.username ||
@@ -78,7 +30,27 @@ function getRank(u = {}) {
 }
 
 function getExp(u = {}) {
-  return Math.max(num(u.exp), num(u.xp), num(u.experience), 0);
+  return num(u.exp ?? u.xp ?? u.experience ?? 0);
+}
+
+function getQuestClear(u = {}) {
+  return num(
+    u.completedQuest ??
+    u.questClear ??
+    u.questsCleared ??
+    u.completedQuests ??
+    0
+  );
+}
+
+function getSpina(u = {}) {
+  return num(
+    u.spina ??
+    u.gold ??
+    u.coins ??
+    u.balance ??
+    0
+  );
 }
 
 export async function loadUsers() {
@@ -96,78 +68,19 @@ export async function loadUsers() {
     const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    const [usersSnap, submissionsSnap, claimsSnap] = await Promise.all([
-      get(ref(db, "users")),
-      get(ref(db, "questSubmissions")),
-      get(ref(db, "claims"))
-    ]);
-
+    const usersSnap = await get(ref(db, "users"));
     const rawUsers = usersSnap.val() || {};
-    const rawSubmissions = submissionsSnap.val() || {};
-    const rawClaims = claimsSnap.val() || {};
 
-    const questClearMap = {};
-    const spinaMap = {};
-
-    const allSubmissions = collectObjects(rawSubmissions);
-
-    allSubmissions.forEach((s) => {
-      if (!s || !s.questId) return;
-      if (!isApproved(s)) return;
-
-      const uid = pickUserId(s);
-      if (!uid) return;
-
-      questClearMap[uid] = (questClearMap[uid] || 0) + 1;
-    });
-
-    const allClaims = collectObjects(rawClaims);
-
-    allClaims.forEach((c) => {
-      if (!c || !isApproved(c)) return;
-
-      const uid = pickUserId(c);
-      if (!uid) return;
-
-      const type = String(c.type || "").toLowerCase();
-
-      if (type === "spina" || type === "gold" || type === "money") {
-        spinaMap[uid] = (spinaMap[uid] || 0) + num(c.amount);
-      }
-
-      if (type === "quest" || c.questId) {
-        questClearMap[uid] = (questClearMap[uid] || 0) + 1;
-      }
-    });
-
-    const users = Object.entries(rawUsers).map(([id, u]) => {
-      return {
-        id,
-        name: getName(id, u || {}),
-        rank: getRank(u || {}),
-        exp: getExp(u || {}),
-        questClear: Number(u.completedQuest ?? 0),
-            questClearMap[id] ||
-            num(u?.completedQuest) ||
-            num(u?.questsCleared) ||
-            num(u?.questClear) ||
-            num(u?.completedQuests) ||
-            0,
-        spina:
-          spinaMap[id] ||
-          num(u?.spina) ||
-          num(u?.gold) ||
-          num(u?.coins) ||
-          num(u?.balance) ||
-          0
-      };
-    });
+    const users = Object.entries(rawUsers).map(([id, u]) => ({
+      id,
+      name: getName(id, u || {}),
+      rank: getRank(u || {}),
+      exp: getExp(u || {}),
+      questClear: getQuestClear(u || {}),
+      spina: getSpina(u || {})
+    }));
 
     console.log("RAW USERS:", rawUsers);
-    console.log("RAW QUEST SUBMISSIONS:", rawSubmissions);
-    console.log("RAW CLAIMS:", rawClaims);
-    console.log("QUEST CLEAR MAP:", questClearMap);
-    console.log("SPINA MAP:", spinaMap);
     console.log("FINAL USERS:", users);
 
     return users;
