@@ -1,25 +1,75 @@
 export const DISCORD_INVITE = "https://discord.gg/kVqaRA6aqM";
 
-export const RANK_POWER = { F:1, E:2, D:3, C:4, B:5, A:6, S:7, SS:8, SSS:9 };
+export const RANK_POWER = {
+  F: 1, E: 2, D: 3, C: 4, B: 5, A: 6, S: 7, SS: 8, SSS: 9
+};
 
 export function rankValue(rank = "F") {
   return RANK_POWER[String(rank).toUpperCase().replace("RANK ", "").trim()] || 0;
 }
 
-function toNumber(value) {
-  if (typeof value === "number") return value;
-  if (typeof value === "string") return Number(value.replace(/[^\d.-]/g, "")) || 0;
+function num(v) {
+  if (typeof v === "number") return v;
+  if (typeof v === "string") return Number(v.replace(/[^\d.-]/g, "")) || 0;
   return 0;
 }
 
-function getSpina(u = {}) {
-  return Math.max(
-    toNumber(u.spina),
-    toNumber(u.gold),
-    toNumber(u.coins),
-    toNumber(u.balance),
-    toNumber(u.money),
-    0
+function pickUserId(obj = {}) {
+  return String(
+    obj.userId ||
+    obj.uid ||
+    obj.discordId ||
+    obj.discordID ||
+    obj.memberId ||
+    obj.authorId ||
+    obj.playerId ||
+    obj.user ||
+    ""
+  );
+}
+
+function isApproved(obj = {}) {
+  const status = String(obj.status || "").toLowerCase();
+  return (
+    status === "approved" ||
+    status === "accept" ||
+    status === "accepted" ||
+    status === "clear" ||
+    status === "cleared" ||
+    Boolean(obj.approvedAt)
+  );
+}
+
+function collectObjects(node, result = []) {
+  if (!node || typeof node !== "object") return result;
+
+  if (
+    node.questId ||
+    node.type ||
+    node.amount ||
+    node.status ||
+    node.approvedAt
+  ) {
+    result.push(node);
+  }
+
+  for (const value of Object.values(node)) {
+    if (value && typeof value === "object") {
+      collectObjects(value, result);
+    }
+  }
+
+  return result;
+}
+
+function getName(id, u = {}) {
+  return (
+    u.username ||
+    u.name ||
+    u.displayName ||
+    u.discordName ||
+    u.nickname ||
+    `Adventurer ${id.slice(-4)}`
   );
 }
 
@@ -28,26 +78,7 @@ function getRank(u = {}) {
 }
 
 function getExp(u = {}) {
-  return Math.max(toNumber(u.exp), toNumber(u.xp), toNumber(u.experience), 0);
-}
-
-export function normalizeUser(id, u = {}, questClearMap = {}) {
-  return {
-    id,
-
-    name:
-      u.username ||
-      u.name ||
-      u.displayName ||
-      u.discordName ||
-      u.nickname ||
-      `Adventurer ${id.slice(-4)}`,
-
-    rank: getRank(u),
-    spina: getSpina(u),
-    questClear: questClearMap[id] || 0,
-    exp: getExp(u)
-  };
+  return Math.max(num(u.exp), num(u.xp), num(u.experience), 0);
 }
 
 export async function loadUsers() {
@@ -65,35 +96,73 @@ export async function loadUsers() {
     const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    const [usersSnap, submissionsSnap] = await Promise.all([
+    const [usersSnap, submissionsSnap, claimsSnap] = await Promise.all([
       get(ref(db, "users")),
-      get(ref(db, "questSubmissions"))
+      get(ref(db, "questSubmissions")),
+      get(ref(db, "claims"))
     ]);
 
     const rawUsers = usersSnap.val() || {};
     const rawSubmissions = submissionsSnap.val() || {};
+    const rawClaims = claimsSnap.val() || {};
 
     const questClearMap = {};
+    const spinaMap = {};
 
-    Object.values(rawSubmissions).forEach((submission) => {
-      if (!submission) return;
+    const allSubmissions = collectObjects(rawSubmissions);
 
-      const userId = String(submission.userId || "");
-      const status = String(submission.status || "").toLowerCase();
+    allSubmissions.forEach((s) => {
+      if (!s || !s.questId) return;
+      if (!isApproved(s)) return;
 
-      if (!userId) return;
+      const uid = pickUserId(s);
+      if (!uid) return;
 
-      if (status === "approved" || status === "accepted" || status === "clear") {
-        questClearMap[userId] = (questClearMap[userId] || 0) + 1;
+      questClearMap[uid] = (questClearMap[uid] || 0) + 1;
+    });
+
+    const allClaims = collectObjects(rawClaims);
+
+    allClaims.forEach((c) => {
+      if (!c || !isApproved(c)) return;
+
+      const uid = pickUserId(c);
+      if (!uid) return;
+
+      const type = String(c.type || "").toLowerCase();
+
+      if (type === "spina" || type === "gold" || type === "money") {
+        spinaMap[uid] = (spinaMap[uid] || 0) + num(c.amount);
+      }
+
+      if (type === "quest" || c.questId) {
+        questClearMap[uid] = (questClearMap[uid] || 0) + 1;
       }
     });
 
-    const users = Object.entries(rawUsers).map(([id, u]) =>
-      normalizeUser(id, u || {}, questClearMap)
-    );
+    const users = Object.entries(rawUsers).map(([id, u]) => {
+      return {
+        id,
+        name: getName(id, u || {}),
+        rank: getRank(u || {}),
+        exp: getExp(u || {}),
+        questClear: questClearMap[id] || num(u?.questsCleared) || num(u?.questClear) || 0,
+        spina:
+          spinaMap[id] ||
+          num(u?.spina) ||
+          num(u?.gold) ||
+          num(u?.coins) ||
+          num(u?.balance) ||
+          0
+      };
+    });
 
-    console.log("Aqua Mirage users:", users);
-    console.log("Quest clear map:", questClearMap);
+    console.log("RAW USERS:", rawUsers);
+    console.log("RAW QUEST SUBMISSIONS:", rawSubmissions);
+    console.log("RAW CLAIMS:", rawClaims);
+    console.log("QUEST CLEAR MAP:", questClearMap);
+    console.log("SPINA MAP:", spinaMap);
+    console.log("FINAL USERS:", users);
 
     return users;
   } catch (e) {
